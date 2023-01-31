@@ -49,12 +49,6 @@ final class ModuleClassLoader extends ClassLoaderProxy {
         super(shared, parent);
         this.module = owner;
     }
-    
-    protected void finalize() throws Throwable {
-        super.finalize();
-        LogHelper.getDefaultLogger().info("ModuleClassLoader gc'ed " + module.getModuleDefinition().getName());
-    }
-
 
     protected synchronized Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
         initialize(name);

@@ -20,11 +20,13 @@ import com.sun.enterprise.module.common_impl.LogHelper;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.lang.ref.Cleaner;
 import java.net.URL;
 import java.net.URLClassLoader;
 import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.ArrayList;
+import java.util.logging.Level;
 
 /**
  * Facade for {@link ModuleClassLoader} to only expose public classes.
@@ -43,12 +45,14 @@ final class ClassLoaderFacade extends URLClassLoader {
     public ClassLoaderFacade(ModuleClassLoader privateLoader) {
         super(EMPTY_URLS, privateLoader.getParent());
         this.privateLoader = privateLoader;
+        registerStopEvent();
     }
 
-    protected void finalize() throws Throwable {
-        super.finalize();
-        LogHelper.getDefaultLogger().fine("Facade ClassLoader killed " + privateLoader.getOwner().getModuleDefinition().getName());
-        privateLoader.stop();
+    public final void registerStopEvent() {
+        Cleaner.create().register(this, () -> {
+            LogHelper.getDefaultLogger().log(Level.FINE, "Facade ClassLoader killed {0}", privateLoader.getOwner().getModuleDefinition().getName());
+            privateLoader.stop();
+        });
     }
 
     public void setPublicPkgs(String[] publicPkgs) {

@@ -17,6 +17,7 @@
 package org.glassfish.hk2.internal;
 
 import java.lang.annotation.Annotation;
+import java.lang.ref.Cleaner;
 import java.security.AccessController;
 import java.security.PrivilegedAction;
 import java.util.HashMap;
@@ -114,9 +115,13 @@ public class InheritableThreadContext implements Context<InheritableThread> {
     }
 
     private static class InheritableContextThreadWrapper {
-        private final HashMap<ActiveDescriptor<?>, Object> instances =
-                new HashMap<ActiveDescriptor<?>, Object>();
+        
+        private final HashMap<ActiveDescriptor<?>, Object> instances = new HashMap<>();
         private final long id = Thread.currentThread().getId();
+
+        public InheritableContextThreadWrapper() {
+            registerStopEvent();
+        }
 
         public boolean has(ActiveDescriptor<?> d) {
             return instances.containsKey(d);
@@ -130,13 +135,14 @@ public class InheritableThreadContext implements Context<InheritableThread> {
             instances.put(d, v);
         }
 
-        @Override
-        public void finalize() throws Throwable {
-            instances.clear();
+        public final void registerStopEvent() {
+            Cleaner.create().register(this, () -> {
+                instances.clear();
 
-            if (LOG_THREAD_DESTRUCTION) {
-                Logger.getLogger().debug("Removing PerThreadContext data for thread " + id);
-            }
+                if (LOG_THREAD_DESTRUCTION) {
+                    Logger.getLogger().debug("Removing PerThreadContext data for thread " + id);
+                }
+            });
         }
 
     }

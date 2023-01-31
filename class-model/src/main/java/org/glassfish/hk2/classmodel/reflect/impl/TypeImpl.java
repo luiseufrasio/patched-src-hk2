@@ -47,14 +47,6 @@ public class TypeImpl extends AnnotatedElementImpl implements Type {
 
     synchronized void addDefiningURI(URI uri) {
         definingURIs.add(uri);
-        try {
-            File file = new File(uri);
-//            assert(file.exists()) : file + " does not exist";
-            definingURIs.add(file.getCanonicalFile().toURI());
-        } catch (IOException e) {
-            // ignore, this is a safeguard for confused user's code that do not
-            // deal well with file path.
-        }
     }
 
     @Override

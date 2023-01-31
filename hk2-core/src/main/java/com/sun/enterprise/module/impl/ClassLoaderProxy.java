@@ -23,6 +23,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.io.IOException;
+import java.lang.ref.Cleaner;
 
 /**
  * ClassLoaderProxy capable of loading classes from itself but also from other class loaders
@@ -37,11 +38,7 @@ public class ClassLoaderProxy extends URLClassLoader {
     /** Creates a new instance of ClassLoader */
     public ClassLoaderProxy(URL[] shared, ClassLoader parent) {
         super(shared, parent);
-    }
-
-    protected void finalize() throws Throwable {
-        super.finalize();
-        stop();
+        registerStopEvent();
     }
 
     protected Class<?> loadClass(String name, boolean resolve, boolean followImports)
@@ -193,7 +190,7 @@ public class ClassLoaderProxy extends URLClassLoader {
     }
 
     public Collection<ClassLoader> getDelegates() {
-        return new ArrayList<ClassLoader>(surrogates);
+        return new ArrayList<>(surrogates);
     }
 
 
@@ -201,11 +198,18 @@ public class ClassLoaderProxy extends URLClassLoader {
      * called by the facade class loader when it is garbage collected.
      * this is a good time to see if this module should be unloaded.
      */
-    public void stop() {
-       surrogates.clear();
-       facadeSurrogates.clear();
+    public final void registerStopEvent() {
+        Cleaner.create().register(this, () -> {
+            stop();
+        });
     }
 
+    public void stop() {
+        surrogates.clear();
+        facadeSurrogates.clear();
+    }
+
+    @Override
     public String toString() {
         StringBuffer s= new StringBuffer();
         s.append(",URls[]=");
