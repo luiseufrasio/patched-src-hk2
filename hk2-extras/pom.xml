@@ -24,7 +24,7 @@
     <parent>
         <groupId>org.glassfish.hk2</groupId>
         <artifactId>hk2-parent</artifactId>
-        <version>4.0.0-SNAPSHOT</version>
+        <version>4.0.0-M3.payara-p1</version>
     </parent>
 
     <groupId>org.glassfish.hk2</groupId>
@@ -84,6 +84,17 @@
             <plugin>
                 <groupId>org.apache.felix</groupId>
                 <artifactId>maven-bundle-plugin</artifactId>
+                <configuration>
+                    <instructions>
+                        <Export-Package>
+                            org.glassfish.hk2.extras; \
+                            org.glassfish.hk2.extras.events; \
+                            org.glassfish.hk2.extras.interception; \
+                            org.glassfish.hk2.extras.operation; \
+                            org.glassfish.hk2.extras.provides; version=${project.osgi.version}
+                        </Export-Package>
+                    </instructions>
+                </configuration>
                 <executions>
                     <execution>
                         <id>bundle-manifest</id>
